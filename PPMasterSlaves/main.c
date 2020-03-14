@@ -27,26 +27,28 @@ int main(int argc , char * argv[])
 	if( my_rank != 0)
 	{
 		dest = 0;
+
 		int colSiz;
-		//int rowSiz1;
 		int resutSiz;
         int e;
 
-		MPI_Recv(colSiz, 1, MPI_INT, source, tag, MPI_COMM_WORLD,&status);
+		MPI_Recv(&colSiz, 1, MPI_INT, source, tag, MPI_COMM_WORLD,&status);
 		int *arr = (int *)malloc(colSiz*sizeof(int ));
 
-		//MPI_Recv(rowSiz1, 1, MPI_INT, dest, tag, MPI_COMM_WORLD,&status);
-		MPI_Recv(resutSiz, 1, MPI_INT, dest, tag, MPI_COMM_WORLD,&status);
+
+		MPI_Recv(&resutSiz, 1, MPI_INT, dest, tag, MPI_COMM_WORLD,&status);
 		MPI_Recv(arr, colSiz, MPI_INT, dest, tag, MPI_COMM_WORLD,&status);
 		int x ;
 		int r = 0;
 		for(x=0;x<colSiz;x++){
-            MPI_Recv(e, 1, MPI_INT, dest, tag, MPI_COMM_WORLD,&status);
+            MPI_Recv(&e, 1, MPI_INT, dest, tag, MPI_COMM_WORLD,&status);
+
             r +=(e*arr[x]);
 		}
 
+		//printf("this is the number");
 
-		MPI_Send(r , 1, MPI_INT, dest, tag, MPI_COMM_WORLD);
+		MPI_Send(&r , 1, MPI_INT, dest, tag, MPI_COMM_WORLD);
 	}else
 	{
 
@@ -72,10 +74,10 @@ int main(int argc , char * argv[])
         printf("enter the number of column=");
         scanf("%d",&c1);
 
-            while(r1!=c){
+           /* while(r1!=c){
                 printf("They cant be multiplied enter another numbers of row");
                 scanf("%d",&r1);
-            }
+            } */
 
 
         Matrix2 =(int **)malloc(r1*sizeof(int *));
@@ -88,36 +90,47 @@ int main(int argc , char * argv[])
             }
         }
         int m;
+        int resultSize=r*c1;
         int turn = 1;
         int rNum = 0;
         int rNum1 = 0;
+
         for( source = 1; source < p ; source++){
-            MPI_Send( c, 1 , MPI_INT, source, tag, MPI_COMM_WORLD);
+
+            MPI_Send( &c, 1 , MPI_INT, source, tag, MPI_COMM_WORLD);
+
             //MPI_Send( r1, 1 , MPI_INT, source, tag, MPI_COMM_WORLD);
-            MPI_Send( (r*c1), 1 , MPI_INT, source, tag, MPI_COMM_WORLD);
+            MPI_Send( &resultSize, 1 , MPI_INT, source, tag, MPI_COMM_WORLD);
         }
 
 
-
-        for(m=0;m<(r*c1);m++){
+        for(m=0;m<resultSize;m++){
             MPI_Send( Matrix1[rNum], c , MPI_INT, turn, tag, MPI_COMM_WORLD);
+
             int e;
             for(e=0;e<r1;e++){
-                MPI_Send( Matrix2[rNum1][e], 1 , MPI_INT, turn, tag, MPI_COMM_WORLD);
+                    printf("the sent e (%d) (%d)\n",e,rNum1);
+                    printf("the sent e (%d)\n",Matrix2[e][rNum1]);
+                MPI_Send( &Matrix2[e][rNum1], 1 , MPI_INT, turn, tag, MPI_COMM_WORLD);
             }
+            ++rNum1;
             turn++;
-            if(turn >= p) turn = 0;
-            rNum1++;
-            if(rNum1 > c1){
+            if(turn == p){
+                    turn = 1;}
+
+                    printf("hii %d %d\n",c1,rNum1);
+            if(rNum1 == c1){
+                    printf("hi %d %d\n",c1,rNum1);
                 rNum1 = 0;
                 rNum++;
             }
 
         }
+
 		for( source = 1; source < p ; source++)
 		{
-            MPI_Recv(index, 1, MPI_INT, source, tag, MPI_COMM_WORLD,&status);
-			printf("%d\n" , &index);
+            MPI_Recv(&index, 1, MPI_INT, source, tag, MPI_COMM_WORLD,&status);
+			printf("%d\n" , index);
 		}
 	}
 
